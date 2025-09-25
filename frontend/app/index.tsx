@@ -15,8 +15,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import Slider from 'react-native-slider';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 const NOISE_TYPES = ['white', 'pink', 'brown', 'gray', 'blue'];
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function TinnitusTherapyApp() {
   // Audio state
