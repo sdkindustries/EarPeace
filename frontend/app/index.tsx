@@ -269,9 +269,7 @@ export default function TinnitusTherapyApp() {
         setTimer(prev => ({ ...prev, remaining: prev.duration }));
       }
 
-      let audioSourcesCreated = 0;
-
-      // Play enabled noise types with higher volume
+      // Collect enabled audio sources for user feedback
       Object.entries(noiseSettings).forEach(([type, settings]) => {
         if (settings.enabled) {
           const buffer = createNoiseBuffer(type);
