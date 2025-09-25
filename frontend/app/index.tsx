@@ -252,12 +252,22 @@ export default function TinnitusTherapyApp() {
       
       // Create AudioContext within user gesture to bypass autoplay policy (using native Web Audio API)
       if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-        // Use the native browser AudioContext API
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        // Use the native browser AudioContext API with better detection
+        let AudioContextClass = null;
+        
+        if (typeof window !== 'undefined') {
+          AudioContextClass = window.AudioContext || 
+                            (window as any).webkitAudioContext || 
+                            (window as any).mozAudioContext || 
+                            (window as any).msAudioContext;
+        }
+        
         if (AudioContextClass) {
           audioContextRef.current = new AudioContextClass();
           console.log('✅ Native AudioContext created in user gesture');
+          console.log(`AudioContext sample rate: ${audioContextRef.current.sampleRate}`);
         } else {
+          console.error('❌ Web Audio API not available');
           throw new Error('Web Audio API not supported in this browser');
         }
       }
