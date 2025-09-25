@@ -83,10 +83,32 @@ export default function TinnitusTherapyApp() {
   // Audio setup
   useEffect(() => {
     setupAudio();
+    
+    // Check if loading a playlist
+    if (params.loadPlaylist) {
+      try {
+        const playlistData = JSON.parse(params.loadPlaylist);
+        loadPlaylistData(playlistData);
+      } catch (error) {
+        console.log('Error loading playlist:', error);
+      }
+    }
+    
     return () => {
       cleanupAudio();
     };
   }, []);
+
+  const loadPlaylistData = (playlistData) => {
+    if (playlistData.noiseSettings) setNoiseSettings(playlistData.noiseSettings);
+    if (playlistData.specificFrequency) setSpecificFrequency(playlistData.specificFrequency);
+    if (playlistData.frequencyRange) setFrequencyRange(playlistData.frequencyRange);
+    if (playlistData.notchFilter) setNotchFilter(playlistData.notchFilter);
+    if (playlistData.burstSettings) setBurstSettings(playlistData.burstSettings);
+    if (playlistData.timer) setTimer(playlistData.timer);
+    
+    Alert.alert('Playlist Loaded', `Settings from "${playlistData.name}" have been loaded.`);
+  };
 
   const setupAudio = async () => {
     try {
