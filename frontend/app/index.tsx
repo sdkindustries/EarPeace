@@ -322,10 +322,10 @@ export default function TinnitusTherapyApp() {
       }
 
     } catch (error) {
-      console.error('Audio playbook error:', error);
+      console.error('Audio simulation error:', error);
       // Don't reset playing state immediately - let user manually stop
-      console.log('⚠️ Audio failed but keeping Stop button visible - user can manually stop');
-      Alert.alert('Audio Error', `Audio failed: ${error.message}. Click Stop to reset.`);
+      console.log('⚠️ Audio simulation failed but keeping Stop button visible');
+      Alert.alert('Audio Error', `Simulation failed: ${error.message}. Click Stop to reset.`);
     }
   };
 
