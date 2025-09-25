@@ -849,7 +849,9 @@ export default function TinnitusTherapyApp() {
                   activeSourcesRef.current.forEach(source => {
                     try {
                       if (source && source.stop) source.stop();
-                    } catch (e) {}
+                    } catch (e) {
+                      // Ignore cleanup errors
+                    }
                   });
                   activeSourcesRef.current = [];
                   console.log('🔄 Emergency reset performed');
