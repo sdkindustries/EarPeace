@@ -378,9 +378,10 @@ export default function TinnitusTherapyApp() {
       }
 
     } catch (error) {
-      console.error('Audio playback error:', error);
-      Alert.alert('Playback Error', `Failed to start audio playback: ${error.message}. Button state reset.`);
-      setIsPlaying(false);
+      console.error('Audio playbook error:', error);
+      // Don't reset playing state immediately - let user manually stop
+      console.log('⚠️ Audio failed but keeping Stop button visible - user can manually stop');
+      Alert.alert('Audio Error', `Audio failed: ${error.message}. Click Stop to reset.`);
     }
   };
 
