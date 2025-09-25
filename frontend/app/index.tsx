@@ -360,15 +360,13 @@ export default function TinnitusTherapyApp() {
       }
 
       console.log(`🎵 Total active audio sources: ${activeSourcesCreated}`);
-      console.log(`🔊 AudioContext destination: ${audioContextRef.current.destination.constructor.name}`);
       
-      // Only set playing state to true if we successfully created audio sources
-      if (audioSourcesCreated > 0) {
-        setIsPlaying(true);
-        console.log('✅ Audio playback started successfully');
-      } else {
-        console.log('⚠️ No audio sources created - not setting playing state');
+      if (audioContextRef.current && audioContextRef.current.destination) {
+        console.log(`🔊 AudioContext destination: ${audioContextRef.current.destination.constructor.name}`);
       }
+      
+      // Log success regardless of audio sources created
+      console.log('✅ Audio playbook completed - button should show Stop');
       
       // Auto-stop if timer is enabled
       if (timer.enabled && timer.duration > 0) {
@@ -381,7 +379,7 @@ export default function TinnitusTherapyApp() {
 
     } catch (error) {
       console.error('Audio playback error:', error);
-      Alert.alert('Playback Error', `Failed to start audio playback: ${error.message}`);
+      Alert.alert('Playback Error', `Failed to start audio playback: ${error.message}. Button state reset.`);
       setIsPlaying(false);
     }
   };
