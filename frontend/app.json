@@ -33,8 +33,7 @@
           "resizeMode": "contain",
           "backgroundColor": "#000"
         }
-      ],
-      "react-native-audio-api"
+      ]
     ],
     "experiments": {
       "typedRoutes": true
