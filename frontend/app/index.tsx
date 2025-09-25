@@ -180,7 +180,15 @@ export default function TinnitusTherapyApp() {
 
     try {
       const playlistData = {
+        id: `playlist_${Date.now()}`,
         name: playlistName,
+        noise_types: noiseSettings,
+        specific_frequencies: specificFrequency.enabled ? [specificFrequency] : [],
+        frequency_ranges: frequencyRange.enabled ? [frequencyRange] : [],
+        notch_filters: notchFilter.enabled ? [notchFilter] : [],
+        burst_settings: burstSettings.enabled ? burstSettings : {},
+        timer_duration: timer.enabled ? timer.duration : null,
+        // Legacy format for local storage compatibility
         noiseSettings,
         specificFrequency,
         frequencyRange,
@@ -190,11 +198,34 @@ export default function TinnitusTherapyApp() {
         createdAt: new Date().toISOString(),
       };
 
+      // Save to local storage
       const existingPlaylists = await AsyncStorage.getItem('tinnitusPlaylists');
       const playlists = existingPlaylists ? JSON.parse(existingPlaylists) : [];
       playlists.push(playlistData);
-      
       await AsyncStorage.setItem('tinnitusPlaylists', JSON.stringify(playlists));
+
+      // Save to backend if available
+      if (BACKEND_URL) {
+        try {
+          const response = await fetch(`${BACKEND_URL}/api/audio-settings`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: playlistData.name,
+              noise_types: playlistData.noise_types,
+              specific_frequencies: playlistData.specific_frequencies,
+              frequency_ranges: playlistData.frequency_ranges,
+              notch_filters: playlistData.notch_filters,
+              burst_settings: playlistData.burst_settings,
+              timer_duration: playlistData.timer_duration,
+            }),
+          });
+        } catch (apiError) {
+          console.log('API save failed, but saved locally');
+        }
+      }
       
       Alert.alert('Success', 'Playlist saved successfully');
       setPlaylistName('');
