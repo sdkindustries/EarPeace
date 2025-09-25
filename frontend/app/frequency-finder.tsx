@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Audio } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
-import Slider from 'react-native-slider';
+import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
