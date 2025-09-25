@@ -125,12 +125,19 @@ export default function TinnitusTherapyApp() {
 
   const setupAudio = async () => {
     try {
-      // Web Audio API doesn't need setup - just enable the interface
+      // Simple audio setup for Expo
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        staysActiveInBackground: false,
+      });
       setAudioEnabled(true);
-      console.log('✅ Audio system ready - Native Web Audio API will be used on user interaction');
+      console.log('✅ Expo audio system ready');
     } catch (error) {
       console.log('Audio setup error:', error);
-      Alert.alert('Audio Error', 'Failed to initialize audio system');
+      // Still enable the interface even if audio setup fails
+      setAudioEnabled(true);
+      console.log('✅ Audio interface enabled despite setup error');
     }
   };
 
