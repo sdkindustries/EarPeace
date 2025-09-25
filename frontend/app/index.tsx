@@ -252,10 +252,16 @@ export default function TinnitusTherapyApp() {
       setIsPlaying(true);
       console.log('🎵 Starting tinnitus therapy audio - Creating AudioContext in user gesture...');
       
-      // Create AudioContext within user gesture to bypass autoplay policy
+      // Create AudioContext within user gesture to bypass autoplay policy (using native Web Audio API)
       if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-        audioContextRef.current = new AudioContext();
-        console.log('✅ AudioContext created in user gesture');
+        // Use the native browser AudioContext API
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioContextRef.current = new AudioContextClass();
+          console.log('✅ Native AudioContext created in user gesture');
+        } else {
+          throw new Error('Web Audio API not supported in this browser');
+        }
       }
       
       // Resume AudioContext if suspended
