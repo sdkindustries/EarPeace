@@ -698,6 +698,29 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#999',
+    marginBottom: 15,
+  },
+  navigationButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 10,
+  },
+  navButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#333',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  navButtonText: {
+    color: '#FFF',
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
   },
   tabContainer: {
     flexDirection: 'row',
