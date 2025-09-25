@@ -903,7 +903,7 @@ export default function TinnitusTherapyApp() {
                 color="#FFF"
               />
               <Text style={styles.playButtonText}>
-                {isPlaying ? 'Stop' : 'Play'}
+                {isPlaying ? 'Stop' : 'Play'} {/* Debug: ${isPlaying} */}
               </Text>
             </TouchableOpacity>
             
