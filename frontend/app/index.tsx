@@ -115,6 +115,10 @@ export default function TinnitusTherapyApp() {
 
   const setupAudio = async () => {
     try {
+      // Initialize AudioContext
+      audioContextRef.current = new AudioContext();
+      
+      // Set up traditional audio system for compatibility
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
         interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
@@ -122,28 +126,123 @@ export default function TinnitusTherapyApp() {
         shouldDuckAndroid: true,
         interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
         playThroughEarpieceAndroid: false,
-        staysActiveInBackground: true,
+        staysActiveInBackground: false,
       });
+      
       setAudioEnabled(true);
+      console.log('✅ Audio system initialized with Web Audio API');
     } catch (error) {
+      console.log('Audio setup error:', error);
       Alert.alert('Audio Error', 'Failed to initialize audio system');
     }
   };
 
   const cleanupAudio = () => {
-    Object.values(sounds).forEach((sound: any) => {
-      if (sound) {
-        sound.unloadAsync();
+    // Stop all active audio sources
+    activeSourcesRef.current.forEach(source => {
+      try {
+        if (source && source.stop) {
+          source.stop();
+        }
+      } catch (error) {
+        console.log('Error stopping audio source:', error);
       }
     });
+    activeSourcesRef.current = [];
+    
+    // Close audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+    }
   };
 
-  const generateWhiteNoise = () => {
-    // Simplified white noise generation for demo
-    // In a real app, you'd use Web Audio API or generate actual audio buffers
-    return new Promise((resolve) => {
-      setTimeout(() => resolve({ play: () => {}, pause: () => {}, stop: () => {} }), 100);
-    });
+  // Create white noise buffer
+  const createNoiseBuffer = (type = 'white', duration = 2) => {
+    if (!audioContextRef.current) return null;
+    
+    const audioCtx = audioContextRef.current;
+    const bufferSize = audioCtx.sampleRate * duration;
+    const buffer = audioCtx.createBuffer(2, bufferSize, audioCtx.sampleRate);
+    
+    for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+      const data = buffer.getChannelData(channel);
+      
+      switch (type) {
+        case 'white':
+          // White noise - equal energy across all frequencies
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+          }
+          break;
+        case 'pink':
+          // Pink noise - 1/f noise
+          let b0, b1, b2, b3, b4, b5, b6;
+          b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
+          for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            b0 = 0.99886 * b0 + white * 0.0555179;
+            b1 = 0.99332 * b1 + white * 0.0750759;
+            b2 = 0.96900 * b2 + white * 0.1538520;
+            b3 = 0.86650 * b3 + white * 0.3104856;
+            b4 = 0.55000 * b4 + white * 0.5329522;
+            b5 = -0.7616 * b5 - white * 0.0168980;
+            data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+            b6 = white * 0.115926;
+          }
+          break;
+        case 'brown':
+          // Brown noise - 1/f² noise  
+          let lastOut = 0.0;
+          for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            data[i] = (lastOut + (0.02 * white)) / 1.02;
+            lastOut = data[i];
+            data[i] *= 3.5; // Compensation for the low-pass filter
+          }
+          break;
+        case 'gray':
+          // Gray noise - psychoacoustic equal loudness
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * 0.8;
+          }
+          break;
+        case 'blue':
+          // Blue noise - f noise (opposite of pink)
+          let lastBlue = 0.0;
+          for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            data[i] = white - lastBlue;
+            lastBlue = white;
+            data[i] *= 0.5;
+          }
+          break;
+        default:
+          // Default to white noise
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+          }
+      }
+    }
+    
+    return buffer;
+  };
+
+  // Create oscillator for tones
+  const createOscillator = (frequency, type = 'sine') => {
+    if (!audioContextRef.current) return null;
+    
+    const audioCtx = audioContextRef.current;
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+    
+    // Connect oscillator to gain to destination
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    
+    return { oscillator, gainNode };
   };
 
   const playAudio = async () => {
