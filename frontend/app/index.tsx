@@ -276,18 +276,8 @@ export default function TinnitusTherapyApp() {
         }
       });
 
-      // Play specific frequency if enabled with higher volume
       if (specificFrequency.enabled) {
-        const { oscillator, gainNode } = createOscillator(specificFrequency.frequency) || {};
-        if (oscillator && gainNode) {
-          // Increase volume significantly (was 0.2, now 0.6)
-          const finalVolume = specificFrequency.volume * 0.6;
-          gainNode.gain.setValueAtTime(finalVolume, audioContextRef.current.currentTime);
-          oscillator.start();
-          activeSourcesRef.current.push(oscillator);
-          audioSourcesCreated++;
-          console.log(`✅ Playing ${specificFrequency.frequency}Hz tone at volume ${finalVolume.toFixed(2)} (${Math.round(specificFrequency.volume * 100)}%)`);
-        }
+        enabledSources.push(`${specificFrequency.frequency}Hz tone (${Math.round(specificFrequency.volume * 100)}% volume)`);
       }
 
       // Play frequency range (simplified as multiple tones) with higher volume
