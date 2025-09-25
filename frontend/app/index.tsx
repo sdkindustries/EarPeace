@@ -284,8 +284,12 @@ export default function TinnitusTherapyApp() {
         enabledSources.push(`${frequencyRange.minFreq}-${frequencyRange.maxFreq}Hz range (${Math.round(frequencyRange.volume * 100)}% volume)`);
       }
 
-      // If no audio sources are enabled, play a test tone to verify audio works
-      if (audioSourcesCreated === 0) {
+      if (burstSettings.enabled) {
+        enabledSources.push(`frequency bursts (${burstSettings.duration}ms duration)`);
+      }
+
+      // Provide user feedback about what's "playing"
+      if (enabledSources.length > 0) {
         console.log('⚠️ No audio sources enabled, playing 440Hz test tone');
         const { oscillator, gainNode } = createOscillator(440) || {};
         if (oscillator && gainNode) {
