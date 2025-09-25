@@ -10,7 +10,7 @@ import {
   Switch,
   TextInput,
 } from 'react-native';
-import { Audio } from 'expo-av';
+// Removed expo-av import - using native Web Audio API only
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
