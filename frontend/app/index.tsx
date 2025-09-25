@@ -246,7 +246,6 @@ export default function TinnitusTherapyApp() {
     }
 
     try {
-      setIsPlaying(true);
       console.log('🎵 Starting tinnitus therapy audio - Creating AudioContext in user gesture...');
       
       // Create AudioContext within user gesture to bypass autoplay policy (using native Web Audio API)
