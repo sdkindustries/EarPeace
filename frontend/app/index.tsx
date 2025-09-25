@@ -243,26 +243,37 @@ export default function TinnitusTherapyApp() {
   };
 
   const playAudio = async () => {
-    if (!audioEnabled || !audioContextRef.current) {
+    if (!audioEnabled) {
       Alert.alert('Audio Not Ready', 'Please wait for audio system to initialize');
       return;
     }
 
     try {
       setIsPlaying(true);
-      console.log('🎵 Starting tinnitus therapy audio...');
+      console.log('🎵 Starting tinnitus therapy audio - Creating AudioContext in user gesture...');
+      
+      // Create AudioContext within user gesture to bypass autoplay policy
+      if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+        audioContextRef.current = new AudioContext();
+        console.log('✅ AudioContext created in user gesture');
+      }
       
       // Resume AudioContext if suspended
       if (audioContextRef.current.state === 'suspended') {
         await audioContextRef.current.resume();
+        console.log('✅ AudioContext resumed');
       }
+      
+      console.log(`🎵 AudioContext state: ${audioContextRef.current.state}`);
       
       // Start timer if enabled
       if (timer.enabled) {
         setTimer(prev => ({ ...prev, remaining: prev.duration }));
       }
 
-      // Play enabled noise types
+      let audioSourcesCreated = 0;
+
+      // Play enabled noise types with higher volume
       Object.entries(noiseSettings).forEach(([type, settings]) => {
         if (settings.enabled) {
           const buffer = createNoiseBuffer(type);
@@ -274,44 +285,68 @@ export default function TinnitusTherapyApp() {
             source.loop = true;
             source.connect(gainNode);
             gainNode.connect(audioContextRef.current.destination);
-            gainNode.gain.setValueAtTime(settings.volume * 0.3, audioContextRef.current.currentTime);
+            
+            // Increase volume significantly (was 0.3, now 0.8)
+            const finalVolume = settings.volume * 0.8;
+            gainNode.gain.setValueAtTime(finalVolume, audioContextRef.current.currentTime);
             
             source.start();
             activeSourcesRef.current.push(source);
-            console.log(`✅ Playing ${type} noise at ${Math.round(settings.volume * 100)}% volume`);
+            audioSourcesCreated++;
+            console.log(`✅ Playing ${type} noise at volume ${finalVolume.toFixed(2)} (${Math.round(settings.volume * 100)}%)`);
           }
         }
       });
 
-      // Play specific frequency if enabled
+      // Play specific frequency if enabled with higher volume
       if (specificFrequency.enabled) {
         const { oscillator, gainNode } = createOscillator(specificFrequency.frequency) || {};
         if (oscillator && gainNode) {
-          gainNode.gain.setValueAtTime(specificFrequency.volume * 0.2, audioContextRef.current.currentTime);
+          // Increase volume significantly (was 0.2, now 0.6)
+          const finalVolume = specificFrequency.volume * 0.6;
+          gainNode.gain.setValueAtTime(finalVolume, audioContextRef.current.currentTime);
           oscillator.start();
           activeSourcesRef.current.push(oscillator);
-          console.log(`✅ Playing ${specificFrequency.frequency}Hz tone at ${Math.round(specificFrequency.volume * 100)}% volume`);
+          audioSourcesCreated++;
+          console.log(`✅ Playing ${specificFrequency.frequency}Hz tone at volume ${finalVolume.toFixed(2)} (${Math.round(specificFrequency.volume * 100)}%)`);
         }
       }
 
-      // Play frequency range (simplified as multiple tones)
+      // Play frequency range (simplified as multiple tones) with higher volume
       if (frequencyRange.enabled) {
-        const numTones = 5; // Play 5 tones across the range
+        const numTones = 3; // Reduced to 3 tones for clearer audio
         const step = (frequencyRange.maxFreq - frequencyRange.minFreq) / (numTones - 1);
         
         for (let i = 0; i < numTones; i++) {
           const freq = frequencyRange.minFreq + (step * i);
           const { oscillator, gainNode } = createOscillator(freq) || {};
           if (oscillator && gainNode) {
-            gainNode.gain.setValueAtTime((frequencyRange.volume * 0.1) / numTones, audioContextRef.current.currentTime);
+            // Increase volume significantly (was 0.1/numTones, now 0.4/numTones)
+            const finalVolume = (frequencyRange.volume * 0.4) / numTones;
+            gainNode.gain.setValueAtTime(finalVolume, audioContextRef.current.currentTime);
             oscillator.start();
             activeSourcesRef.current.push(oscillator);
+            audioSourcesCreated++;
           }
         }
-        console.log(`✅ Playing frequency range ${frequencyRange.minFreq}-${frequencyRange.maxFreq}Hz`);
+        console.log(`✅ Playing frequency range ${frequencyRange.minFreq}-${frequencyRange.maxFreq}Hz (${numTones} tones)`);
       }
 
-      console.log(`🎵 Total active audio sources: ${activeSourcesRef.current.length}`);
+      // If no audio sources are enabled, play a test tone to verify audio works
+      if (audioSourcesCreated === 0) {
+        console.log('⚠️ No audio sources enabled, playing 440Hz test tone');
+        const { oscillator, gainNode } = createOscillator(440) || {};
+        if (oscillator && gainNode) {
+          gainNode.gain.setValueAtTime(0.3, audioContextRef.current.currentTime);
+          oscillator.start();
+          activeSourcesRef.current.push(oscillator);
+          audioSourcesCreated++;
+          Alert.alert('Test Audio', 'Playing 440Hz test tone. Enable noise types or frequencies for therapy audio.');
+        }
+      }
+
+      console.log(`🎵 Total active audio sources: ${activeSourcesCreated}`);
+      console.log(`🔊 AudioContext destination: ${audioContextRef.current.destination.constructor.name}`);
       
       // Auto-stop if timer is enabled
       if (timer.enabled && timer.duration > 0) {
@@ -324,7 +359,7 @@ export default function TinnitusTherapyApp() {
 
     } catch (error) {
       console.error('Audio playback error:', error);
-      Alert.alert('Playback Error', 'Failed to start audio playback');
+      Alert.alert('Playback Error', `Failed to start audio playback: ${error.message}`);
       setIsPlaying(false);
     }
   };
