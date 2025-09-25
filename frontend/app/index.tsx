@@ -313,6 +313,7 @@ export default function TinnitusTherapyApp() {
       
       // Auto-stop if timer is enabled
       if (timer.enabled && timer.duration > 0) {
+        console.log(`⏱️ Timer set for ${timer.duration} seconds`);
         setTimeout(() => {
           if (isPlaying) {
             stopAudio();
