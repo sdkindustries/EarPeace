@@ -1,191 +1,215 @@
+diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
+index 842c7ab..b49c017 100644
+--- a/frontend/app/index.tsx
++++ b/frontend/app/index.tsx
+@@ -350,6 +350,14 @@ export default function TinnitusTherapyApp() {
+       console.log(`🎵 Total active audio sources: ${activeSourcesCreated}`);
+       console.log(`🔊 AudioContext destination: ${audioContextRef.current.destination.constructor.name}`);
+       
++      // Only set playing state to true if we successfully created audio sources
++      if (audioSourcesCreated > 0) {
++        setIsPlaying(true);
++        console.log('✅ Audio playback started successfully');
++      } else {
++        console.log('⚠️ No audio sources created - not setting playing state');
++      }
++      
+       // Auto-stop if timer is enabled
+       if (timer.enabled && timer.duration > 0) {
+         setTimeout(() => {
 diff --git a/model.patch b/model.patch
-index 692ad25..e69de29 100644
+index e9fba96..e69de29 100644
 --- a/model.patch
 +++ b/model.patch
-@@ -1,186 +0,0 @@
--diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
--index ad2f6a8..07d4dc4 100644
----- a/frontend/app/index.tsx
--+++ b/frontend/app/index.tsx
--@@ -246,32 +246,111 @@ export default function TinnitusTherapyApp() {
--   };
-- 
--   const playAudio = async () => {
---    if (!audioEnabled) {
--+    if (!audioEnabled || !audioContextRef.current) {
--       Alert.alert('Audio Not Ready', 'Please wait for audio system to initialize');
--       return;
--     }
-- 
--     try {
--       setIsPlaying(true);
--+      console.log('🎵 Starting tinnitus therapy audio...');
--+      
--+      // Resume AudioContext if suspended
--+      if (audioContextRef.current.state === 'suspended') {
--+        await audioContextRef.current.resume();
--+      }
--       
--       // Start timer if enabled
--       if (timer.enabled) {
--         setTimer(prev => ({ ...prev, remaining: prev.duration }));
--       }
-- 
---      // Generate and play enabled sounds
---      // This is a simplified implementation - in production you'd use proper audio synthesis
---      Alert.alert('Audio Started', 'Tinnitus therapy audio is now playing');
--+      // Play enabled noise types
--+      Object.entries(noiseSettings).forEach(([type, settings]) => {
--+        if (settings.enabled) {
--+          const buffer = createNoiseBuffer(type);
--+          if (buffer) {
--+            const source = audioContextRef.current.createBufferSource();
--+            const gainNode = audioContextRef.current.createGain();
--+            
--+            source.buffer = buffer;
--+            source.loop = true;
--+            source.connect(gainNode);
--+            gainNode.connect(audioContextRef.current.destination);
--+            gainNode.gain.setValueAtTime(settings.volume * 0.3, audioContextRef.current.currentTime);
--+            
--+            source.start();
--+            activeSourcesRef.current.push(source);
--+            console.log(`✅ Playing ${type} noise at ${Math.round(settings.volume * 100)}% volume`);
--+          }
--+        }
--+      });
--+
--+      // Play specific frequency if enabled
--+      if (specificFrequency.enabled) {
--+        const { oscillator, gainNode } = createOscillator(specificFrequency.frequency) || {};
--+        if (oscillator && gainNode) {
--+          gainNode.gain.setValueAtTime(specificFrequency.volume * 0.2, audioContextRef.current.currentTime);
--+          oscillator.start();
--+          activeSourcesRef.current.push(oscillator);
--+          console.log(`✅ Playing ${specificFrequency.frequency}Hz tone at ${Math.round(specificFrequency.volume * 100)}% volume`);
--+        }
--+      }
--+
--+      // Play frequency range (simplified as multiple tones)
--+      if (frequencyRange.enabled) {
--+        const numTones = 5; // Play 5 tones across the range
--+        const step = (frequencyRange.maxFreq - frequencyRange.minFreq) / (numTones - 1);
--+        
--+        for (let i = 0; i < numTones; i++) {
--+          const freq = frequencyRange.minFreq + (step * i);
--+          const { oscillator, gainNode } = createOscillator(freq) || {};
--+          if (oscillator && gainNode) {
--+            gainNode.gain.setValueAtTime((frequencyRange.volume * 0.1) / numTones, audioContextRef.current.currentTime);
--+            oscillator.start();
--+            activeSourcesRef.current.push(oscillator);
--+          }
--+        }
--+        console.log(`✅ Playing frequency range ${frequencyRange.minFreq}-${frequencyRange.maxFreq}Hz`);
--+      }
--+
--+      console.log(`🎵 Total active audio sources: ${activeSourcesRef.current.length}`);
--+      
--+      // Auto-stop if timer is enabled
--+      if (timer.enabled && timer.duration > 0) {
--+        setTimeout(() => {
--+          if (isPlaying) {
--+            stopAudio();
--+          }
--+        }, timer.duration * 1000);
--+      }
--+
--     } catch (error) {
--+      console.error('Audio playback error:', error);
--       Alert.alert('Playback Error', 'Failed to start audio playback');
--       setIsPlaying(false);
--     }
--   };
-- 
--   const stopAudio = () => {
--+    console.log('🔇 Stopping all audio sources...');
--+    
--+    // Stop all active sources
--+    activeSourcesRef.current.forEach(source => {
--+      try {
--+        if (source && source.stop) {
--+          source.stop();
--+        }
--+      } catch (error) {
--+        console.log('Error stopping source:', error);
--+      }
--+    });
--+    
--+    activeSourcesRef.current = [];
--     setIsPlaying(false);
--     setTimer(prev => ({ ...prev, remaining: 0 }));
---    Alert.alert('Audio Stopped', 'Tinnitus therapy audio has been stopped');
--+    
--+    console.log('✅ All audio stopped');
--   };
-- 
--   const savePlaylist = async () => {
--@@ -722,7 +801,7 @@ export default function TinnitusTherapyApp() {
--               onPress={() => setActiveTab(tab.key)}
--             >
--               <Ionicons
---                name={tab.icon as any}
--+                name={tab.icon}
--                 size={20}
--                 color={activeTab === tab.key ? '#007AFF' : '#666'}
--               />
+@@ -1,191 +0,0 @@
 -diff --git a/model.patch b/model.patch
--index e2364a3..91df72a 100644
+-index 692ad25..e69de29 100644
 ---- a/model.patch
 -+++ b/model.patch
--@@ -1,51 +0,0 @@
+-@@ -1,186 +0,0 @@
+--diff --git a/frontend/app/index.tsx b/frontend/app/index.tsx
+--index ad2f6a8..07d4dc4 100644
+----- a/frontend/app/index.tsx
+--+++ b/frontend/app/index.tsx
+--@@ -246,32 +246,111 @@ export default function TinnitusTherapyApp() {
+--   };
+-- 
+--   const playAudio = async () => {
+---    if (!audioEnabled) {
+--+    if (!audioEnabled || !audioContextRef.current) {
+--       Alert.alert('Audio Not Ready', 'Please wait for audio system to initialize');
+--       return;
+--     }
+-- 
+--     try {
+--       setIsPlaying(true);
+--+      console.log('🎵 Starting tinnitus therapy audio...');
+--+      
+--+      // Resume AudioContext if suspended
+--+      if (audioContextRef.current.state === 'suspended') {
+--+        await audioContextRef.current.resume();
+--+      }
+--       
+--       // Start timer if enabled
+--       if (timer.enabled) {
+--         setTimer(prev => ({ ...prev, remaining: prev.duration }));
+--       }
+-- 
+---      // Generate and play enabled sounds
+---      // This is a simplified implementation - in production you'd use proper audio synthesis
+---      Alert.alert('Audio Started', 'Tinnitus therapy audio is now playing');
+--+      // Play enabled noise types
+--+      Object.entries(noiseSettings).forEach(([type, settings]) => {
+--+        if (settings.enabled) {
+--+          const buffer = createNoiseBuffer(type);
+--+          if (buffer) {
+--+            const source = audioContextRef.current.createBufferSource();
+--+            const gainNode = audioContextRef.current.createGain();
+--+            
+--+            source.buffer = buffer;
+--+            source.loop = true;
+--+            source.connect(gainNode);
+--+            gainNode.connect(audioContextRef.current.destination);
+--+            gainNode.gain.setValueAtTime(settings.volume * 0.3, audioContextRef.current.currentTime);
+--+            
+--+            source.start();
+--+            activeSourcesRef.current.push(source);
+--+            console.log(`✅ Playing ${type} noise at ${Math.round(settings.volume * 100)}% volume`);
+--+          }
+--+        }
+--+      });
+--+
+--+      // Play specific frequency if enabled
+--+      if (specificFrequency.enabled) {
+--+        const { oscillator, gainNode } = createOscillator(specificFrequency.frequency) || {};
+--+        if (oscillator && gainNode) {
+--+          gainNode.gain.setValueAtTime(specificFrequency.volume * 0.2, audioContextRef.current.currentTime);
+--+          oscillator.start();
+--+          activeSourcesRef.current.push(oscillator);
+--+          console.log(`✅ Playing ${specificFrequency.frequency}Hz tone at ${Math.round(specificFrequency.volume * 100)}% volume`);
+--+        }
+--+      }
+--+
+--+      // Play frequency range (simplified as multiple tones)
+--+      if (frequencyRange.enabled) {
+--+        const numTones = 5; // Play 5 tones across the range
+--+        const step = (frequencyRange.maxFreq - frequencyRange.minFreq) / (numTones - 1);
+--+        
+--+        for (let i = 0; i < numTones; i++) {
+--+          const freq = frequencyRange.minFreq + (step * i);
+--+          const { oscillator, gainNode } = createOscillator(freq) || {};
+--+          if (oscillator && gainNode) {
+--+            gainNode.gain.setValueAtTime((frequencyRange.volume * 0.1) / numTones, audioContextRef.current.currentTime);
+--+            oscillator.start();
+--+            activeSourcesRef.current.push(oscillator);
+--+          }
+--+        }
+--+        console.log(`✅ Playing frequency range ${frequencyRange.minFreq}-${frequencyRange.maxFreq}Hz`);
+--+      }
+--+
+--+      console.log(`🎵 Total active audio sources: ${activeSourcesRef.current.length}`);
+--+      
+--+      // Auto-stop if timer is enabled
+--+      if (timer.enabled && timer.duration > 0) {
+--+        setTimeout(() => {
+--+          if (isPlaying) {
+--+            stopAudio();
+--+          }
+--+        }, timer.duration * 1000);
+--+      }
+--+
+--     } catch (error) {
+--+      console.error('Audio playback error:', error);
+--       Alert.alert('Playback Error', 'Failed to start audio playback');
+--       setIsPlaying(false);
+--     }
+--   };
+-- 
+--   const stopAudio = () => {
+--+    console.log('🔇 Stopping all audio sources...');
+--+    
+--+    // Stop all active sources
+--+    activeSourcesRef.current.forEach(source => {
+--+      try {
+--+        if (source && source.stop) {
+--+          source.stop();
+--+        }
+--+      } catch (error) {
+--+        console.log('Error stopping source:', error);
+--+      }
+--+    });
+--+    
+--+    activeSourcesRef.current = [];
+--     setIsPlaying(false);
+--     setTimer(prev => ({ ...prev, remaining: 0 }));
+---    Alert.alert('Audio Stopped', 'Tinnitus therapy audio has been stopped');
+--+    
+--+    console.log('✅ All audio stopped');
+--   };
+-- 
+--   const savePlaylist = async () => {
+--@@ -722,7 +801,7 @@ export default function TinnitusTherapyApp() {
+--               onPress={() => setActiveTab(tab.key)}
+--             >
+--               <Ionicons
+---                name={tab.icon as any}
+--+                name={tab.icon}
+--                 size={20}
+--                 color={activeTab === tab.key ? '#007AFF' : '#666'}
+--               />
 --diff --git a/model.patch b/model.patch
---index b8c61fd..e69de29 100644
+--index e2364a3..91df72a 100644
 ----- a/model.patch
 --+++ b/model.patch
---@@ -1,46 +0,0 @@
----diff --git a/test_result.md b/test_result.md
----index 4a9dc61..5f61999 100644
------- a/test_result.md
----+++ b/test_result.md
----@@ -111,11 +111,14 @@
----     file: "server.py"
----     stuck_count: 0
----     priority: "high"
-----    needs_retesting: true
----+    needs_retesting: false
----     status_history:
----         - working: true
----         - agent: "main"
----         - comment: "Created comprehensive FastAPI backend with MongoDB models for audio settings, tinnitus frequencies, and playlists. Includes full CRUD operations for audio-settings and tinnitus-frequency endpoints."
----+        - working: true
----+        - agent: "testing"
----+        - comment: "✅ COMPREHENSIVE TESTING COMPLETE: All Audio Settings CRUD operations working perfectly. Tested POST/GET/PUT/DELETE endpoints with realistic tinnitus therapy data including noise types (white, pink, brown, gray, blue), specific frequencies (10Hz-25kHz), frequency ranges, notch filters, burst settings, and timer functionality. All endpoints return correct HTTP status codes and proper JSON responses. MongoDB integration confirmed working."
---- 
----   - task: "Database Models"
----     implemented: true
----@@ -123,11 +126,14 @@
----     file: "server.py"
----     stuck_count: 0
----     priority: "high"
-----    needs_retesting: true
----+    needs_retesting: false
----     status_history:
----         - working: true
----         - agent: "main"
----         - comment: "Created AudioSettings, TinnitusFrequency models with comprehensive field support for all therapy features including noise types, frequencies, notch filters, burst settings."
----+        - working: true
----+        - agent: "testing"
----+        - comment: "✅ DATABASE MODELS FULLY VALIDATED: AudioSettings and TinnitusFrequency models working correctly with MongoDB. Tested data persistence, UUID generation, datetime fields, and complex nested structures. Pydantic validation working for required fields (returns 422 for missing data). Models handle comprehensive therapy data including all noise types, frequency ranges (10Hz-25kHz), volume controls, ear selection (left/right/both), and therapy notes. MongoDB connection stable and collections properly created."
---- 
---- ## frontend:
----   - task: "Main Therapy Interface"
----@@ -185,4 +191,6 @@
---- 
---- ## agent_communication:
----     - agent: "main"
-----    - message: "Completed comprehensive tinnitus therapy app implementation with all requested features. Backend provides full API support for audio settings and frequency management. Frontend includes main therapy interface with 5 noise types, frequency generation (10Hz-25kHz), notch filtering, burst settings, timer, and playlist saving. Added dedicated frequency finder tool with both manual and sweep methods. Created playlist management system with local and cloud storage. Ready for backend testing to verify API endpoints and data persistence."
----\ No newline at end of file
----+    - message: "Completed comprehensive tinnitus therapy app implementation with all requested features. Backend provides full API support for audio settings and frequency management. Frontend includes main therapy interface with 5 noise types, frequency generation (10Hz-25kHz), notch filtering, burst settings, timer, and playlist saving. Added dedicated frequency finder tool with both manual and sweep methods. Created playlist management system with local and cloud storage. Ready for backend testing to verify API endpoints and data persistence."
----+    - agent: "testing"
----+    - message: "✅ BACKEND TESTING COMPLETE - ALL SYSTEMS OPERATIONAL: Comprehensive testing of tinnitus therapy backend API completed successfully. All 13 endpoints tested and working perfectly: Root endpoint, Audio Settings CRUD (create/read/update/delete), Tinnitus Frequency management (create/read/delete). MongoDB integration confirmed stable with proper data persistence. Pydantic validation working correctly (422 errors for missing fields). Edge cases handled properly (404 for invalid IDs). Created comprehensive test suite (backend_test.py) for future regression testing. Backend is production-ready and fully supports the tinnitus therapy application requirements."
----\ No newline at end of file
+--@@ -1,51 +0,0 @@
+---diff --git a/model.patch b/model.patch
+---index b8c61fd..e69de29 100644
+------ a/model.patch
+---+++ b/model.patch
+---@@ -1,46 +0,0 @@
+----diff --git a/test_result.md b/test_result.md
+----index 4a9dc61..5f61999 100644
+------- a/test_result.md
+----+++ b/test_result.md
+----@@ -111,11 +111,14 @@
+----     file: "server.py"
+----     stuck_count: 0
+----     priority: "high"
+-----    needs_retesting: true
+----+    needs_retesting: false
+----     status_history:
+----         - working: true
+----         - agent: "main"
+----         - comment: "Created comprehensive FastAPI backend with MongoDB models for audio settings, tinnitus frequencies, and playlists. Includes full CRUD operations for audio-settings and tinnitus-frequency endpoints."
+----+        - working: true
+----+        - agent: "testing"
+----+        - comment: "✅ COMPREHENSIVE TESTING COMPLETE: All Audio Settings CRUD operations working perfectly. Tested POST/GET/PUT/DELETE endpoints with realistic tinnitus therapy data including noise types (white, pink, brown, gray, blue), specific frequencies (10Hz-25kHz), frequency ranges, notch filters, burst settings, and timer functionality. All endpoints return correct HTTP status codes and proper JSON responses. MongoDB integration confirmed working."
+---- 
+----   - task: "Database Models"
+----     implemented: true
+----@@ -123,11 +126,14 @@
+----     file: "server.py"
+----     stuck_count: 0
+----     priority: "high"
+-----    needs_retesting: true
+----+    needs_retesting: false
+----     status_history:
+----         - working: true
+----         - agent: "main"
+----         - comment: "Created AudioSettings, TinnitusFrequency models with comprehensive field support for all therapy features including noise types, frequencies, notch filters, burst settings."
+----+        - working: true
+----+        - agent: "testing"
+----+        - comment: "✅ DATABASE MODELS FULLY VALIDATED: AudioSettings and TinnitusFrequency models working correctly with MongoDB. Tested data persistence, UUID generation, datetime fields, and complex nested structures. Pydantic validation working for required fields (returns 422 for missing data). Models handle comprehensive therapy data including all noise types, frequency ranges (10Hz-25kHz), volume controls, ear selection (left/right/both), and therapy notes. MongoDB connection stable and collections properly created."
+---- 
+---- ## frontend:
+----   - task: "Main Therapy Interface"
+----@@ -185,4 +191,6 @@
+---- 
+---- ## agent_communication:
+----     - agent: "main"
+-----    - message: "Completed comprehensive tinnitus therapy app implementation with all requested features. Backend provides full API support for audio settings and frequency management. Frontend includes main therapy interface with 5 noise types, frequency generation (10Hz-25kHz), notch filtering, burst settings, timer, and playlist saving. Added dedicated frequency finder tool with both manual and sweep methods. Created playlist management system with local and cloud storage. Ready for backend testing to verify API endpoints and data persistence."
+----\ No newline at end of file
+----+    - message: "Completed comprehensive tinnitus therapy app implementation with all requested features. Backend provides full API support for audio settings and frequency management. Frontend includes main therapy interface with 5 noise types, frequency generation (10Hz-25kHz), notch filtering, burst settings, timer, and playlist saving. Added dedicated frequency finder tool with both manual and sweep methods. Created playlist management system with local and cloud storage. Ready for backend testing to verify API endpoints and data persistence."
+----+    - agent: "testing"
+----+    - message: "✅ BACKEND TESTING COMPLETE - ALL SYSTEMS OPERATIONAL: Comprehensive testing of tinnitus therapy backend API completed successfully. All 13 endpoints tested and working perfectly: Root endpoint, Audio Settings CRUD (create/read/update/delete), Tinnitus Frequency management (create/read/delete). MongoDB integration confirmed stable with proper data persistence. Pydantic validation working correctly (422 errors for missing fields). Edge cases handled properly (404 for invalid IDs). Created comprehensive test suite (backend_test.py) for future regression testing. Backend is production-ready and fully supports the tinnitus therapy application requirements."
+----\ No newline at end of file
