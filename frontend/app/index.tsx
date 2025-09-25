@@ -801,7 +801,7 @@ export default function TinnitusTherapyApp() {
               onPress={() => setActiveTab(tab.key)}
             >
               <Ionicons
-                name={tab.icon as any}
+                name={tab.icon}
                 size={20}
                 color={activeTab === tab.key ? '#007AFF' : '#666'}
               />
