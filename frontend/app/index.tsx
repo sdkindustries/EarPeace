@@ -272,25 +272,7 @@ export default function TinnitusTherapyApp() {
       // Collect enabled audio sources for user feedback
       Object.entries(noiseSettings).forEach(([type, settings]) => {
         if (settings.enabled) {
-          const buffer = createNoiseBuffer(type);
-          if (buffer) {
-            const source = audioContextRef.current.createBufferSource();
-            const gainNode = audioContextRef.current.createGain();
-            
-            source.buffer = buffer;
-            source.loop = true;
-            source.connect(gainNode);
-            gainNode.connect(audioContextRef.current.destination);
-            
-            // Increase volume significantly (was 0.3, now 0.8)
-            const finalVolume = settings.volume * 0.8;
-            gainNode.gain.setValueAtTime(finalVolume, audioContextRef.current.currentTime);
-            
-            source.start();
-            activeSourcesRef.current.push(source);
-            audioSourcesCreated++;
-            console.log(`✅ Playing ${type} noise at volume ${finalVolume.toFixed(2)} (${Math.round(settings.volume * 100)}%)`);
-          }
+          enabledSources.push(`${type} noise (${Math.round(settings.volume * 100)}% volume)`);
         }
       });
 
