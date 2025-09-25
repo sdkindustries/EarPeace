@@ -39,6 +39,9 @@ export default function TinnitusTherapyApp() {
   const audioContextRef = useRef(null);
   const activeSourcesRef = useRef([]);
 
+  // Debug: Log state changes
+  console.log(`🔍 Current isPlaying state: ${isPlaying}`);
+
   // Noise controls
   const [noiseSettings, setNoiseSettings] = useState({
     white: { enabled: false, volume: 0.5 },
