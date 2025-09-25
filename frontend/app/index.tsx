@@ -16,7 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { AudioContext } from 'react-native-audio-api';
+// Using native Web Audio API - no package needed
 
 const NOISE_TYPES = ['white', 'pink', 'brown', 'gray', 'blue'];
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
