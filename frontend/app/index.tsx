@@ -901,6 +901,26 @@ export default function TinnitusTherapyApp() {
                 {isPlaying ? 'Stop' : 'Play'}
               </Text>
             </TouchableOpacity>
+            
+            {/* Emergency Reset Button - only show if user seems stuck */}
+            {isPlaying && (
+              <TouchableOpacity
+                style={styles.resetButton}
+                onPress={() => {
+                  setIsPlaying(false);
+                  activeSourcesRef.current.forEach(source => {
+                    try {
+                      if (source && source.stop) source.stop();
+                    } catch (e) {}
+                  });
+                  activeSourcesRef.current = [];
+                  console.log('🔄 Emergency reset performed');
+                }}
+              >
+                <Ionicons name="refresh" size={20} color="#FFF" />
+                <Text style={styles.resetButtonText}>Reset</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </LinearGradient>
