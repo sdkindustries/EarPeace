@@ -308,7 +308,7 @@ export default function TinnitusTherapyApp() {
         );
       }
 
-      console.log(`🎵 Total active audio sources: ${activeSourcesCreated}`);
+      // Audio simulation completed
       
       if (audioContextRef.current && audioContextRef.current.destination) {
         console.log(`🔊 AudioContext destination: ${audioContextRef.current.destination.constructor.name}`);
