@@ -309,13 +309,7 @@ export default function TinnitusTherapyApp() {
       }
 
       // Audio simulation completed
-      
-      if (audioContextRef.current && audioContextRef.current.destination) {
-        console.log(`🔊 AudioContext destination: ${audioContextRef.current.destination.constructor.name}`);
-      }
-      
-      // Log success regardless of audio sources created
-      console.log('✅ Audio playbook completed - button should show Stop');
+      console.log('✅ Audio simulation completed - button should show Stop');
       
       // Auto-stop if timer is enabled
       if (timer.enabled && timer.duration > 0) {
