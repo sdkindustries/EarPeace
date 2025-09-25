@@ -115,9 +115,6 @@ export default function TinnitusTherapyApp() {
 
   const setupAudio = async () => {
     try {
-      // Initialize AudioContext
-      audioContextRef.current = new AudioContext();
-      
       // Set up traditional audio system for compatibility
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
@@ -130,7 +127,7 @@ export default function TinnitusTherapyApp() {
       });
       
       setAudioEnabled(true);
-      console.log('✅ Audio system initialized with Web Audio API');
+      console.log('✅ Audio system initialized - AudioContext will be created on user interaction');
     } catch (error) {
       console.log('Audio setup error:', error);
       Alert.alert('Audio Error', 'Failed to initialize audio system');
