@@ -56,16 +56,9 @@ export default function FrequencyFinderScreen() {
 
   const setupAudio = async () => {
     try {
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
-        playsInSilentModeIOS: true,
-        shouldDuckAndroid: true,
-        interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
-        playThroughEarpieceAndroid: false,
-        staysActiveInBackground: false,
-      });
+      // Web Audio API doesn't need setup - just enable the interface
       setAudioEnabled(true);
+      console.log('✅ Frequency finder audio ready - Native Web Audio API will be used');
     } catch (error) {
       Alert.alert('Audio Error', 'Failed to initialize audio system');
     }
