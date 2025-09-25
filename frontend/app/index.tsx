@@ -584,6 +584,25 @@ export default function TinnitusTherapyApp() {
         <View style={styles.header}>
           <Text style={styles.title}>Tinnitus Therapy</Text>
           <Text style={styles.subtitle}>Advanced Audio Treatment</Text>
+          
+          {/* Navigation buttons */}
+          <View style={styles.navigationButtons}>
+            <TouchableOpacity 
+              style={styles.navButton} 
+              onPress={() => router.push('/frequency-finder')}
+            >
+              <Ionicons name="pulse" size={20} color="#FFF" />
+              <Text style={styles.navButtonText}>Frequency Finder</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.navButton} 
+              onPress={() => router.push('/playlists')}
+            >
+              <Ionicons name="library" size={20} color="#FFF" />
+              <Text style={styles.navButtonText}>My Playlists</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Tab Navigation */}
