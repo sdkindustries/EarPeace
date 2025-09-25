@@ -280,24 +280,8 @@ export default function TinnitusTherapyApp() {
         enabledSources.push(`${specificFrequency.frequency}Hz tone (${Math.round(specificFrequency.volume * 100)}% volume)`);
       }
 
-      // Play frequency range (simplified as multiple tones) with higher volume
       if (frequencyRange.enabled) {
-        const numTones = 3; // Reduced to 3 tones for clearer audio
-        const step = (frequencyRange.maxFreq - frequencyRange.minFreq) / (numTones - 1);
-        
-        for (let i = 0; i < numTones; i++) {
-          const freq = frequencyRange.minFreq + (step * i);
-          const { oscillator, gainNode } = createOscillator(freq) || {};
-          if (oscillator && gainNode) {
-            // Increase volume significantly (was 0.1/numTones, now 0.4/numTones)
-            const finalVolume = (frequencyRange.volume * 0.4) / numTones;
-            gainNode.gain.setValueAtTime(finalVolume, audioContextRef.current.currentTime);
-            oscillator.start();
-            activeSourcesRef.current.push(oscillator);
-            audioSourcesCreated++;
-          }
-        }
-        console.log(`✅ Playing frequency range ${frequencyRange.minFreq}-${frequencyRange.maxFreq}Hz (${numTones} tones)`);
+        enabledSources.push(`${frequencyRange.minFreq}-${frequencyRange.maxFreq}Hz range (${Math.round(frequencyRange.volume * 100)}% volume)`);
       }
 
       // If no audio sources are enabled, play a test tone to verify audio works
