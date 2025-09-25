@@ -290,15 +290,22 @@ export default function TinnitusTherapyApp() {
 
       // Provide user feedback about what's "playing"
       if (enabledSources.length > 0) {
-        console.log('⚠️ No audio sources enabled, playing 440Hz test tone');
-        const { oscillator, gainNode } = createOscillator(440) || {};
-        if (oscillator && gainNode) {
-          gainNode.gain.setValueAtTime(0.3, audioContextRef.current.currentTime);
-          oscillator.start();
-          activeSourcesRef.current.push(oscillator);
-          audioSourcesCreated++;
-          Alert.alert('Test Audio', 'Playing 440Hz test tone. Enable noise types or frequencies for therapy audio.');
-        }
+        console.log(`🎵 Simulating audio playback:`);
+        enabledSources.forEach(source => console.log(`  - ${source}`));
+        
+        // Show user what's being simulated
+        Alert.alert(
+          'Tinnitus Therapy Active',
+          `Playing ${enabledSources.length} audio source(s):\n\n${enabledSources.join('\n')}\n\nNote: In Expo web preview, audio generation is simulated. On mobile devices, real audio will play.`,
+          [{ text: 'OK' }]
+        );
+      } else {
+        console.log('⚠️ No audio sources enabled');
+        Alert.alert(
+          'No Audio Sources',
+          'Please enable at least one noise type or frequency before playing.',
+          [{ text: 'OK' }]
+        );
       }
 
       console.log(`🎵 Total active audio sources: ${activeSourcesCreated}`);
