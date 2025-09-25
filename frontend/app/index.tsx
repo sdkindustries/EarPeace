@@ -17,6 +17,13 @@ import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 // Using native Web Audio API - no package needed
+// Extend Window interface for TypeScript
+declare global {
+  interface Window {
+    AudioContext: typeof AudioContext;
+    webkitAudioContext: typeof AudioContext;
+  }
+}
 
 const NOISE_TYPES = ['white', 'pink', 'brown', 'gray', 'blue'];
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
