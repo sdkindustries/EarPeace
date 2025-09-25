@@ -122,19 +122,9 @@ export default function TinnitusTherapyApp() {
 
   const setupAudio = async () => {
     try {
-      // Set up traditional audio system for compatibility
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
-        playsInSilentModeIOS: true,
-        shouldDuckAndroid: true,
-        interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
-        playThroughEarpieceAndroid: false,
-        staysActiveInBackground: false,
-      });
-      
+      // Web Audio API doesn't need setup - just enable the interface
       setAudioEnabled(true);
-      console.log('✅ Audio system initialized - AudioContext will be created on user interaction');
+      console.log('✅ Audio system ready - Native Web Audio API will be used on user interaction');
     } catch (error) {
       console.log('Audio setup error:', error);
       Alert.alert('Audio Error', 'Failed to initialize audio system');
