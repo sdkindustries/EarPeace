@@ -246,32 +246,111 @@ export default function TinnitusTherapyApp() {
   };
 
   const playAudio = async () => {
-    if (!audioEnabled) {
+    if (!audioEnabled || !audioContextRef.current) {
       Alert.alert('Audio Not Ready', 'Please wait for audio system to initialize');
       return;
     }
 
     try {
       setIsPlaying(true);
+      console.log('🎵 Starting tinnitus therapy audio...');
+      
+      // Resume AudioContext if suspended
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
       
       // Start timer if enabled
       if (timer.enabled) {
         setTimer(prev => ({ ...prev, remaining: prev.duration }));
       }
 
-      // Generate and play enabled sounds
-      // This is a simplified implementation - in production you'd use proper audio synthesis
-      Alert.alert('Audio Started', 'Tinnitus therapy audio is now playing');
+      // Play enabled noise types
+      Object.entries(noiseSettings).forEach(([type, settings]) => {
+        if (settings.enabled) {
+          const buffer = createNoiseBuffer(type);
+          if (buffer) {
+            const source = audioContextRef.current.createBufferSource();
+            const gainNode = audioContextRef.current.createGain();
+            
+            source.buffer = buffer;
+            source.loop = true;
+            source.connect(gainNode);
+            gainNode.connect(audioContextRef.current.destination);
+            gainNode.gain.setValueAtTime(settings.volume * 0.3, audioContextRef.current.currentTime);
+            
+            source.start();
+            activeSourcesRef.current.push(source);
+            console.log(`✅ Playing ${type} noise at ${Math.round(settings.volume * 100)}% volume`);
+          }
+        }
+      });
+
+      // Play specific frequency if enabled
+      if (specificFrequency.enabled) {
+        const { oscillator, gainNode } = createOscillator(specificFrequency.frequency) || {};
+        if (oscillator && gainNode) {
+          gainNode.gain.setValueAtTime(specificFrequency.volume * 0.2, audioContextRef.current.currentTime);
+          oscillator.start();
+          activeSourcesRef.current.push(oscillator);
+          console.log(`✅ Playing ${specificFrequency.frequency}Hz tone at ${Math.round(specificFrequency.volume * 100)}% volume`);
+        }
+      }
+
+      // Play frequency range (simplified as multiple tones)
+      if (frequencyRange.enabled) {
+        const numTones = 5; // Play 5 tones across the range
+        const step = (frequencyRange.maxFreq - frequencyRange.minFreq) / (numTones - 1);
+        
+        for (let i = 0; i < numTones; i++) {
+          const freq = frequencyRange.minFreq + (step * i);
+          const { oscillator, gainNode } = createOscillator(freq) || {};
+          if (oscillator && gainNode) {
+            gainNode.gain.setValueAtTime((frequencyRange.volume * 0.1) / numTones, audioContextRef.current.currentTime);
+            oscillator.start();
+            activeSourcesRef.current.push(oscillator);
+          }
+        }
+        console.log(`✅ Playing frequency range ${frequencyRange.minFreq}-${frequencyRange.maxFreq}Hz`);
+      }
+
+      console.log(`🎵 Total active audio sources: ${activeSourcesRef.current.length}`);
+      
+      // Auto-stop if timer is enabled
+      if (timer.enabled && timer.duration > 0) {
+        setTimeout(() => {
+          if (isPlaying) {
+            stopAudio();
+          }
+        }, timer.duration * 1000);
+      }
+
     } catch (error) {
+      console.error('Audio playback error:', error);
       Alert.alert('Playback Error', 'Failed to start audio playback');
       setIsPlaying(false);
     }
   };
 
   const stopAudio = () => {
+    console.log('🔇 Stopping all audio sources...');
+    
+    // Stop all active sources
+    activeSourcesRef.current.forEach(source => {
+      try {
+        if (source && source.stop) {
+          source.stop();
+        }
+      } catch (error) {
+        console.log('Error stopping source:', error);
+      }
+    });
+    
+    activeSourcesRef.current = [];
     setIsPlaying(false);
     setTimer(prev => ({ ...prev, remaining: 0 }));
-    Alert.alert('Audio Stopped', 'Tinnitus therapy audio has been stopped');
+    
+    console.log('✅ All audio stopped');
   };
 
   const savePlaylist = async () => {
