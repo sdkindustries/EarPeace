@@ -259,7 +259,7 @@ export default function TinnitusTherapyApp() {
       // Set playing state immediately so button updates
       setIsPlaying(true);
       console.log('✅ Button state set to PLAYING - should show Stop button now');
-      console.log('🎵 Starting tinnitus therapy audio - Creating AudioContext in user gesture...');
+      console.log('🎵 Starting tinnitus therapy simulation...');
       
       // Create AudioContext within user gesture to bypass autoplay policy (using native Web Audio API)
       if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
