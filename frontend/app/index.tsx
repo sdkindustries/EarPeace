@@ -21,6 +21,9 @@ const NOISE_TYPES = ['white', 'pink', 'brown', 'gray', 'blue'];
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function TinnitusTherapyApp() {
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  
   // Audio state
   const [isPlaying, setIsPlaying] = useState(false);
   const [sounds, setSounds] = useState({});
