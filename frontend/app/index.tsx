@@ -29,6 +29,8 @@ export default function TinnitusTherapyApp() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sounds, setSounds] = useState({});
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const audioContextRef = useRef(null);
+  const activeSourcesRef = useRef([]);
 
   // Noise controls
   const [noiseSettings, setNoiseSettings] = useState({
