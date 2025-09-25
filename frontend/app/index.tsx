@@ -1120,4 +1120,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 10,
   },
+  resetButton: {
+    flexDirection: 'row',
+    backgroundColor: '#FF9500',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 15,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  resetButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 5,
+  },
 });
