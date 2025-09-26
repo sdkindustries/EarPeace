@@ -454,17 +454,34 @@ export default function TinnitusTherapyApp() {
     }
   };
 
-  const stopAudio = () => {
+  const stopAudio = async () => {
     console.log('🔇 Stopping all audio sources...');
     
-    // Stop all active sources
+    // Stop and unload all expo-av sounds
+    for (const [key, sound] of Object.entries(sounds)) {
+      try {
+        if (sound) {
+          console.log(`🔇 Stopping ${key} sound...`);
+          await sound.stopAsync();
+          await sound.unloadAsync();
+          console.log(`✅ ${key} sound stopped and unloaded`);
+        }
+      } catch (error) {
+        console.log(`Error stopping ${key} sound:`, error);
+      }
+    }
+    
+    // Clear sounds state
+    setSounds({});
+    
+    // Stop any remaining active sources (fallback)
     activeSourcesRef.current.forEach(source => {
       try {
         if (source && source.stop) {
           source.stop();
         }
       } catch (error) {
-        console.log('Error stopping source:', error);
+        console.log('Error stopping legacy source:', error);
       }
     });
     
@@ -472,7 +489,7 @@ export default function TinnitusTherapyApp() {
     setIsPlaying(false);
     setTimer(prev => ({ ...prev, remaining: 0 }));
     
-    console.log('✅ All audio stopped');
+    console.log('✅ All audio stopped and cleaned up');
   };
 
   const savePlaylist = async () => {
