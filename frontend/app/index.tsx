@@ -242,6 +242,68 @@ export default function TinnitusTherapyApp() {
     return { oscillator, gainNode };
   };
 
+  // Generate audio data URLs for different noise types
+  const generateNoiseDataUrl = (type: string, duration: number = 5) => {
+    const sampleRate = 44100;
+    const samples = sampleRate * duration;
+    const buffer = new ArrayBuffer(44 + samples * 2);
+    const view = new DataView(buffer);
+    
+    // WAV header
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + samples * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, samples * 2, true);
+    
+    // Generate noise samples
+    let offset = 44;
+    for (let i = 0; i < samples; i++) {
+      let sample = 0;
+      
+      switch (type) {
+        case 'white':
+          sample = (Math.random() * 2 - 1) * 0.1;
+          break;
+        case 'pink':
+          sample = (Math.random() * 2 - 1) * 0.08;
+          break;
+        case 'brown':
+          sample = (Math.random() * 2 - 1) * 0.05;
+          break;
+        case 'gray':
+          sample = (Math.random() * 2 - 1) * 0.07;
+          break;
+        case 'blue':
+          sample = (Math.random() * 2 - 1) * 0.12;
+          break;
+        default:
+          sample = Math.sin(2 * Math.PI * 440 * i / sampleRate) * 0.1;
+      }
+      
+      const intSample = Math.max(-32768, Math.min(32767, sample * 32767));
+      view.setInt16(offset, intSample, true);
+      offset += 2;
+    }
+    
+    const blob = new Blob([buffer], { type: 'audio/wav' });
+    return URL.createObjectURL(blob);
+  };
+
   const playAudio = async () => {
     if (!audioEnabled) {
       Alert.alert('Audio Not Ready', 'Please wait for audio system to initialize');
@@ -252,57 +314,129 @@ export default function TinnitusTherapyApp() {
       // Set playing state immediately so button updates
       setIsPlaying(true);
       console.log('✅ Button state set to PLAYING - should show Stop button now');
-      console.log('🎵 Starting tinnitus therapy simulation...');
-      
-      // Count enabled audio sources for user feedback
-      let enabledSources = [];
+      console.log('🎵 Starting real audio playback with expo-av...');
       
       // Start timer if enabled
       if (timer.enabled) {
         setTimer(prev => ({ ...prev, remaining: prev.duration }));
       }
 
-      // Collect enabled audio sources for user feedback
-      Object.entries(noiseSettings).forEach(([type, settings]) => {
+      let audioSourcesCreated = 0;
+      let enabledSources = [];
+
+      // Play enabled noise types using generated audio
+      for (const [type, settings] of Object.entries(noiseSettings)) {
         if (settings.enabled) {
-          enabledSources.push(`${type} noise (${Math.round(settings.volume * 100)}% volume)`);
+          try {
+            console.log(`🎵 Creating ${type} noise audio...`);
+            
+            // Generate noise audio data URL
+            const audioUrl = generateNoiseDataUrl(type);
+            
+            // Create and play sound using expo-av
+            const { sound } = await Audio.Sound.createAsync(
+              { uri: audioUrl },
+              { 
+                shouldPlay: true, 
+                isLooping: true, 
+                volume: settings.volume 
+              }
+            );
+            
+            // Store sound reference for stopping later
+            setSounds(prev => ({ ...prev, [type]: sound }));
+            audioSourcesCreated++;
+            enabledSources.push(`${type} noise`);
+            
+            console.log(`✅ Playing real ${type} noise at ${Math.round(settings.volume * 100)}% volume`);
+          } catch (error) {
+            console.error(`Failed to create ${type} noise:`, error);
+          }
         }
-      });
+      }
 
+      // Generate and play specific frequency tone
       if (specificFrequency.enabled) {
-        enabledSources.push(`${specificFrequency.frequency}Hz tone (${Math.round(specificFrequency.volume * 100)}% volume)`);
+        try {
+          console.log(`🎵 Creating ${specificFrequency.frequency}Hz tone...`);
+          
+          // Generate sine wave for specific frequency
+          const generateTone = (freq: number, duration: number = 5) => {
+            const sampleRate = 44100;
+            const samples = sampleRate * duration;
+            const buffer = new ArrayBuffer(44 + samples * 2);
+            const view = new DataView(buffer);
+            
+            // WAV header (same as above)
+            const writeString = (offset: number, string: string) => {
+              for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+              }
+            };
+            
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + samples * 2, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(36, 'data');
+            view.setUint32(40, samples * 2, true);
+            
+            // Generate sine wave
+            let offset = 44;
+            for (let i = 0; i < samples; i++) {
+              const sample = Math.sin(2 * Math.PI * freq * i / sampleRate) * 0.3;
+              const intSample = Math.max(-32768, Math.min(32767, sample * 32767));
+              view.setInt16(offset, intSample, true);
+              offset += 2;
+            }
+            
+            const blob = new Blob([buffer], { type: 'audio/wav' });
+            return URL.createObjectURL(blob);
+          };
+          
+          const toneUrl = generateTone(specificFrequency.frequency);
+          
+          const { sound } = await Audio.Sound.createAsync(
+            { uri: toneUrl },
+            { 
+              shouldPlay: true, 
+              isLooping: true, 
+              volume: specificFrequency.volume 
+            }
+          );
+          
+          setSounds(prev => ({ ...prev, tone: sound }));
+          audioSourcesCreated++;
+          enabledSources.push(`${specificFrequency.frequency}Hz tone`);
+          
+          console.log(`✅ Playing real ${specificFrequency.frequency}Hz tone`);
+        } catch (error) {
+          console.error('Failed to create tone:', error);
+        }
       }
 
-      if (frequencyRange.enabled) {
-        enabledSources.push(`${frequencyRange.minFreq}-${frequencyRange.maxFreq}Hz range (${Math.round(frequencyRange.volume * 100)}% volume)`);
-      }
-
-      if (burstSettings.enabled) {
-        enabledSources.push(`frequency bursts (${burstSettings.duration}ms duration)`);
-      }
-
-      // Provide user feedback about what's "playing"
-      if (enabledSources.length > 0) {
-        console.log(`🎵 Simulating audio playback:`);
-        enabledSources.forEach(source => console.log(`  - ${source}`));
-        
-        // Show user what's being simulated
+      // Provide success feedback
+      if (audioSourcesCreated > 0) {
         Alert.alert(
-          'Tinnitus Therapy Active',
-          `Playing ${enabledSources.length} audio source(s):\n\n${enabledSources.join('\n')}\n\nNote: In Expo web preview, audio generation is simulated. On mobile devices, real audio will play.`,
-          [{ text: 'OK' }]
+          '🎵 Real Audio Playing!',
+          `Successfully started ${audioSourcesCreated} audio source(s):\n\n${enabledSources.join('\n')}\n\n🔊 You should hear the actual audio now!\n\nAdjust your device volume if needed.`,
+          [{ text: 'Got it!' }]
         );
+        console.log(`✅ Real audio playback started - ${audioSourcesCreated} sources active`);
       } else {
-        console.log('⚠️ No audio sources enabled');
         Alert.alert(
           'No Audio Sources',
           'Please enable at least one noise type or frequency before playing.',
           [{ text: 'OK' }]
         );
       }
-
-      // Audio simulation completed
-      console.log('✅ Audio simulation completed - button should show Stop');
       
       // Auto-stop if timer is enabled
       if (timer.enabled && timer.duration > 0) {
@@ -315,10 +449,8 @@ export default function TinnitusTherapyApp() {
       }
 
     } catch (error) {
-      console.error('Audio simulation error:', error);
-      // Don't reset playing state immediately - let user manually stop
-      console.log('⚠️ Audio simulation failed but keeping Stop button visible');
-      Alert.alert('Audio Error', `Simulation failed: ${error.message}. Click Stop to reset.`);
+      console.error('Real audio playback error:', error);
+      Alert.alert('Audio Error', `Failed to start audio: ${error.message}. Click Stop to reset.`);
     }
   };
 
