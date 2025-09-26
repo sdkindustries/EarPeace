@@ -161,24 +161,30 @@ export default function FrequencyFinderScreen() {
   const playTone = async (freq = frequency) => {
     try {
       setIsPlaying(true);
+      console.log(`🎵 Playing real ${freq}Hz tone at ${Math.round(volume * 100)}% volume for ${testEar} ear(s)`);
       
-      // This is a simplified implementation
-      // In production, you'd generate actual sine wave audio
-      console.log(`Playing ${freq}Hz tone at ${volume} volume for ${testEar} ear(s)`);
+      // Generate and play the actual tone
+      const sound = await generateTone(freq, volume);
       
-      // Simulate tone generation
-      setTimeout(() => {
+      if (sound) {
+        await sound.playAsync();
+        console.log(`✅ Successfully started playing ${freq}Hz tone`);
+        
+        // Show user feedback with actual audio playing
         Alert.alert(
-          'Tone Playing',
-          `${freq}Hz tone is playing. Can you hear this frequency? Does it match your tinnitus?`,
+          '🎵 Real Tone Playing!',
+          `${freq}Hz tone is now playing at ${Math.round(volume * 100)}% volume.\n\nCan you hear this frequency? Does it match your tinnitus?\n\n🔊 Adjust your device volume if needed.`,
           [
             { text: 'Stop', onPress: stopTone },
             { text: 'Save Match', onPress: () => saveFrequency(freq) },
           ]
         );
-      }, 100);
+      } else {
+        throw new Error('Failed to generate tone');
+      }
     } catch (error) {
-      Alert.alert('Playback Error', 'Failed to play tone');
+      console.error('Tone playback error:', error);
+      Alert.alert('Playback Error', `Failed to play tone: ${error.message}`);
       setIsPlaying(false);
     }
   };
