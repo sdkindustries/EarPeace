@@ -81,6 +81,47 @@ export default function FrequencyFinderScreen() {
     }
   };
 
+  // Generate real tone audio data URL
+  const generateToneDataUrl = (freq: number, duration: number = 5, volume: number = 0.3) => {
+    const sampleRate = 44100;
+    const samples = sampleRate * duration;
+    const buffer = new ArrayBuffer(44 + samples * 2);
+    const view = new DataView(buffer);
+    
+    // WAV header
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + samples * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, samples * 2, true);
+    
+    // Generate sine wave
+    let offset = 44;
+    for (let i = 0; i < samples; i++) {
+      const sample = Math.sin(2 * Math.PI * freq * i / sampleRate) * volume;
+      const intSample = Math.max(-32768, Math.min(32767, sample * 32767));
+      view.setInt16(offset, intSample, true);
+      offset += 2;
+    }
+    
+    const blob = new Blob([buffer], { type: 'audio/wav' });
+    return URL.createObjectURL(blob);
+  };
+
   const generateTone = async (freq, vol = 0.3) => {
     if (!audioEnabled) {
       Alert.alert('Audio Not Ready', 'Please wait for audio system to initialize');
@@ -93,10 +134,13 @@ export default function FrequencyFinderScreen() {
         await currentSound.unloadAsync();
       }
 
-      // Generate a simple sine wave tone
-      // In production, you'd use Web Audio API or generate actual audio buffers
+      console.log(`🎵 Generating real ${freq}Hz tone at ${Math.round(vol * 100)}% volume`);
+      
+      // Generate real sine wave tone
+      const audioUrl = generateToneDataUrl(freq, 10, vol); // 10 second duration for testing
+      
       const { sound } = await Audio.Sound.createAsync(
-        { uri: `data:audio/wav;base64,UklGRnoGAABXQVZFZm10IAAAAAABAAABACA...` }, // placeholder
+        { uri: audioUrl },
         { 
           shouldPlay: false,
           isLooping: true,
@@ -105,9 +149,11 @@ export default function FrequencyFinderScreen() {
       );
 
       setCurrentSound(sound);
+      console.log(`✅ Real ${freq}Hz tone generated successfully`);
       return sound;
     } catch (error) {
-      console.log('Error generating tone:', error);
+      console.error('Error generating real tone:', error);
+      Alert.alert('Tone Generation Error', `Failed to generate ${freq}Hz tone: ${error.message}`);
       return null;
     }
   };
