@@ -261,27 +261,49 @@ export default function FrequencyFinderScreen() {
     );
   };
 
-  const runSweep = () => {
-    const totalSteps = sweepSettings.duration * 10; // 10 steps per second
-    const freqStep = (sweepSettings.endFreq - sweepSettings.startFreq) / totalSteps;
-    let currentStep = 0;
+  const runSweep = async () => {
+    try {
+      console.log('🎵 Starting real frequency sweep...');
+      const totalSteps = sweepSettings.duration * 2; // 2 steps per second for better performance
+      const freqStep = (sweepSettings.endFreq - sweepSettings.startFreq) / totalSteps;
+      let currentStep = 0;
 
-    const sweepInterval = setInterval(() => {
-      if (!sweepSettings.isRunning || currentStep >= totalSteps) {
-        clearInterval(sweepInterval);
-        setSweepSettings(prev => ({ ...prev, isRunning: false }));
-        stopTone();
-        return;
-      }
+      const sweepInterval = setInterval(async () => {
+        if (!sweepSettings.isRunning || currentStep >= totalSteps) {
+          clearInterval(sweepInterval);
+          setSweepSettings(prev => ({ ...prev, isRunning: false }));
+          await stopTone();
+          console.log('✅ Frequency sweep completed');
+          return;
+        }
 
-      const newFreq = sweepSettings.startFreq + (freqStep * currentStep);
-      setSweepSettings(prev => ({ ...prev, currentFreq: newFreq }));
+        const newFreq = sweepSettings.startFreq + (freqStep * currentStep);
+        setSweepSettings(prev => ({ ...prev, currentFreq: newFreq }));
+        
+        // Generate and play the new frequency
+        try {
+          if (currentSound) {
+            await currentSound.unloadAsync();
+          }
+          
+          const sound = await generateTone(newFreq, volume);
+          if (sound) {
+            await sound.playAsync();
+          }
+          
+          console.log(`🎵 Sweep playing: ${Math.round(newFreq)}Hz`);
+        } catch (error) {
+          console.log(`Error playing sweep frequency ${newFreq}Hz:`, error);
+        }
+        
+        currentStep++;
+      }, 500); // 500ms intervals for smooth sweep
       
-      // In production, you'd actually play this frequency
-      console.log(`Sweep playing: ${newFreq}Hz`);
-      
-      currentStep++;
-    }, 100);
+    } catch (error) {
+      console.error('Sweep error:', error);
+      setSweepSettings(prev => ({ ...prev, isRunning: false }));
+      Alert.alert('Sweep Error', `Failed to run frequency sweep: ${error.message}`);
+    }
   };
 
   const deleteFrequency = (id) => {
