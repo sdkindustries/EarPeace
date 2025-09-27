@@ -141,9 +141,10 @@ export default function FrequencyFinderScreen() {
     }
 
     try {
-      // Stop existing sound
+      // Stop and cleanup existing sound
       if (currentSound) {
         await currentSound.unloadAsync();
+        setCurrentSound(null);
       }
 
       console.log(`🎵 Generating real ${freq}Hz tone at ${Math.round(vol * 100)}% volume`);
