@@ -56,10 +56,17 @@ export default function FrequencyFinderScreen() {
 
   const setupAudio = async () => {
     try {
-      // Web Audio API doesn't need setup - just enable the interface
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        staysActiveInBackground: false,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
       setAudioEnabled(true);
-      console.log('✅ Frequency finder audio ready - Native Web Audio API will be used');
+      console.log('✅ Frequency finder audio ready - expo-av initialized');
     } catch (error) {
+      console.error('Audio setup error:', error);
       Alert.alert('Audio Error', 'Failed to initialize audio system');
     }
   };
