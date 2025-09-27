@@ -422,6 +422,100 @@ export default function TinnitusTherapyApp() {
         }
       }
 
+      // Implement burst settings
+      if (burstSettings.enabled) {
+        try {
+          console.log('🎵 Starting burst mode...');
+          
+          const startBurstMode = () => {
+            let burstSound = null;
+            
+            const playBurst = async () => {
+              try {
+                // Stop any existing burst sound
+                if (burstSound) {
+                  await burstSound.unloadAsync();
+                }
+                
+                // Determine frequency for this burst
+                let burstFreq;
+                if (burstSettings.randomRange) {
+                  // Random frequency within range
+                  burstFreq = Math.random() * (burstSettings.maxFreq - burstSettings.minFreq) + burstSettings.minFreq;
+                  burstFreq = Math.round(burstFreq);
+                } else {
+                  // Fixed frequency
+                  burstFreq = burstSettings.frequency;
+                }
+                
+                console.log(`🎵 Burst: Playing ${burstFreq}Hz for ${burstSettings.duration}ms`);
+                
+                // Generate tone for burst
+                const burstToneUrl = generateToneDataUrl(burstFreq, burstSettings.duration / 1000, 0.4);
+                
+                const { sound } = await Audio.Sound.createAsync(
+                  { uri: burstToneUrl },
+                  { 
+                    shouldPlay: true, 
+                    isLooping: false, // Don't loop - play once for duration
+                    volume: 0.4 
+                  }
+                );
+                
+                burstSound = sound;
+                
+                // Schedule next burst after duration + interval
+                setTimeout(() => {
+                  if (isPlaying && burstSettings.enabled) {
+                    playBurst();
+                  }
+                }, burstSettings.duration + burstSettings.interval);
+                
+              } catch (error) {
+                console.error('Error in burst playback:', error);
+              }
+            };
+            
+            // Start the first burst
+            playBurst();
+          };
+          
+          startBurstMode();
+          audioSourcesCreated++;
+          
+          if (burstSettings.randomRange) {
+            enabledSources.push(`random bursts (${burstSettings.minFreq}-${burstSettings.maxFreq}Hz, ${burstSettings.duration}ms duration, ${burstSettings.interval}ms interval)`);
+          } else {
+            enabledSources.push(`${burstSettings.frequency}Hz bursts (${burstSettings.duration}ms duration, ${burstSettings.interval}ms interval)`);
+          }
+          
+          console.log(`✅ Burst mode started`);
+        } catch (error) {
+          console.error('Failed to create burst audio:', error);
+        }
+      }
+
+      // If no audio sources are enabled, play a test tone to verify audio works
+      if (audioSourcesCreated === 0) {
+        console.log('⚠️ No audio sources enabled, playing 440Hz test tone');
+        const testToneUrl = generateToneDataUrl(440, 5, 0.3);
+        
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: testToneUrl },
+          { 
+            shouldPlay: true, 
+            isLooping: true, 
+            volume: 0.3 
+          }
+        );
+        
+        setSounds(prev => ({ ...prev, test: sound }));
+        audioSourcesCreated++;
+        enabledSources.push('440Hz test tone');
+        
+        console.log(`✅ Playing test tone`);
+      }
+
       // Provide success feedback
       if (audioSourcesCreated > 0) {
         Alert.alert(
