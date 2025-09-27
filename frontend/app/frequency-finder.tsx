@@ -301,16 +301,11 @@ export default function FrequencyFinderScreen() {
         
         // Generate and play the new frequency
         try {
-          if (currentSound) {
-            await currentSound.unloadAsync();
-          }
-          
           const sound = await generateTone(newFreq, volume);
           if (sound) {
             await sound.playAsync();
+            console.log(`🎵 Sweep playing: ${Math.round(newFreq)}Hz`);
           }
-          
-          console.log(`🎵 Sweep playing: ${Math.round(newFreq)}Hz`);
         } catch (error) {
           console.log(`Error playing sweep frequency ${newFreq}Hz:`, error);
         }
