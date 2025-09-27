@@ -584,6 +584,18 @@ export default function TinnitusTherapyApp() {
   const stopAudio = async () => {
     console.log('🔇 Stopping all audio sources...');
     
+    // Clear burst timers first
+    if (burstIntervalRef.current) {
+      clearInterval(burstIntervalRef.current);
+      burstIntervalRef.current = null;
+      console.log('✅ Burst interval cleared');
+    }
+    if (burstTimeoutRef.current) {
+      clearTimeout(burstTimeoutRef.current);
+      burstTimeoutRef.current = null;
+      console.log('✅ Burst timeout cleared');
+    }
+    
     // Stop and unload all expo-av sounds
     for (const [key, sound] of Object.entries(sounds)) {
       try {
