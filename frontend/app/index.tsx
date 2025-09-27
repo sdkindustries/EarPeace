@@ -31,6 +31,8 @@ export default function TinnitusTherapyApp() {
   const [audioEnabled, setAudioEnabled] = useState(false);
   const audioContextRef = useRef(null);
   const activeSourcesRef = useRef([]);
+  const burstIntervalRef = useRef(null);
+  const burstTimeoutRef = useRef(null);
 
   // Debug: Log state changes
   console.log(`🔍 Current isPlaying state: ${isPlaying}`);
