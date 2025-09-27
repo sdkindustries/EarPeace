@@ -358,6 +358,8 @@ export default function TinnitusTherapyApp() {
   };
 
   const playAudio = async () => {
+    console.log('🔍 DEBUG: playAudio called, audioEnabled:', audioEnabled, 'burstSettings.enabled:', burstSettings.enabled);
+    
     if (!audioEnabled) {
       Alert.alert('Audio Not Ready', 'Please wait for audio system to initialize');
       return;
@@ -367,7 +369,8 @@ export default function TinnitusTherapyApp() {
       // Set playing state immediately so button updates
       setIsPlaying(true);
       console.log('✅ Button state set to PLAYING - should show Stop button now');
-      console.log('🎵 Starting real audio playback with expo-av...');
+      console.log('🎵 Starting real audio playbook with expo-av...');
+      console.log('🔍 DEBUG: Current burst settings:', JSON.stringify(burstSettings));
       
       // Start timer if enabled
       if (timer.enabled) {
