@@ -149,6 +149,16 @@ export default function TinnitusTherapyApp() {
     });
     activeSourcesRef.current = [];
     
+    // Clear burst timers
+    if (burstIntervalRef.current) {
+      clearInterval(burstIntervalRef.current);
+      burstIntervalRef.current = null;
+    }
+    if (burstTimeoutRef.current) {
+      clearTimeout(burstTimeoutRef.current);
+      burstTimeoutRef.current = null;
+    }
+    
     // Close audio context
     if (audioContextRef.current) {
       audioContextRef.current.close();
