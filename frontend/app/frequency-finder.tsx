@@ -72,8 +72,13 @@ export default function FrequencyFinderScreen() {
   };
 
   const cleanupAudio = async () => {
-    if (currentSound) {
-      await currentSound.unloadAsync();
+    try {
+      if (currentSound) {
+        await currentSound.unloadAsync();
+        setCurrentSound(null);
+      }
+    } catch (error) {
+      console.log('Cleanup audio error:', error);
     }
   };
 
