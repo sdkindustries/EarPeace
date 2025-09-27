@@ -11,7 +11,7 @@ from datetime import datetime
 import sys
 
 # Use the production backend URL from frontend/.env
-BASE_URL = "https://tinnitusrelief.preview.emergentagent.com/api"
+BASE_URL = "https://tinnitus-relief.preview.emergentagent.com/api"
 
 class TinnitusAPITester:
     def __init__(self):
