@@ -138,15 +138,18 @@
 ## frontend:
   - task: "Main Therapy Interface"
     implemented: true
-    working: true
+    working: false
     file: "index.tsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: true
     status_history:
         - working: true
         - agent: "main"
         - comment: "Comprehensive tinnitus therapy app with tabbed interface for noise controls (white, pink, brown, gray, blue), frequency generation (specific and range), notch filtering, burst settings, timer functionality, and playlist saving. Includes navigation to frequency finder and playlists."
+        - working: false
+        - agent: "user"
+        - comment: "User reports burst mode issues: 1) Not repeating at intervals - only plays once, 2) After stopping doesn't start again, 3) Should be independent of white noise tab, 4) White noise should not burst when burst is enabled"
 
   - task: "Frequency Finder Tool"
     implemented: true
