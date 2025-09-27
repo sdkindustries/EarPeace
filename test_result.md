@@ -168,6 +168,9 @@
         - working: false
         - agent: "main"
         - comment: "Investigation reveals expo-av Audio import was removed but code still tries to use Audio.Sound.createAsync. Mixed implementation between Web Audio API and expo-av causing crashes. Need to fix audio implementation."
+        - working: true
+        - agent: "main"
+        - comment: "Fixed frequency finder by properly importing expo-av and implementing audio setup, cleanup, and playback functions. UI is working correctly with manual frequency adjustment (1000Hz default) and sweep mode (100-8000Hz range). Both play tone and sweep functionality are operational. Audio modals may not show in web preview but functionality is restored."
 
   - task: "Playlist Management"
     implemented: true
