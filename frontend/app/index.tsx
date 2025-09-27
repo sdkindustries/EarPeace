@@ -358,6 +358,7 @@ export default function TinnitusTherapyApp() {
   };
 
   const playAudio = async () => {
+    console.log('🚀 CRITICAL: playAudio function CALLED!');
     console.log('🔍 DEBUG: playAudio called, audioEnabled:', audioEnabled, 'burstSettings.enabled:', burstSettings.enabled);
     
     if (!audioEnabled) {
