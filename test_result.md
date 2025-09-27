@@ -153,15 +153,21 @@
 
   - task: "Frequency Finder Tool"
     implemented: true
-    working: true
+    working: false
     file: "frequency-finder.tsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: true
     status_history:
         - working: true
         - agent: "main"
         - comment: "Dual-method frequency finder with manual slider adjustment and automatic frequency sweep. Supports separate ear testing (left, right, both), frequency saving, and integration with backend API. Frequency range 10Hz-25kHz with volume controls."
+        - working: false
+        - agent: "user"
+        - comment: "User reports frequency finder is not working"
+        - working: false
+        - agent: "main"
+        - comment: "Investigation reveals expo-av Audio import was removed but code still tries to use Audio.Sound.createAsync. Mixed implementation between Web Audio API and expo-av causing crashes. Need to fix audio implementation."
 
   - task: "Playlist Management"
     implemented: true
