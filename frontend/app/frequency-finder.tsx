@@ -8,7 +8,7 @@ import {
   Alert,
   Switch,
 } from 'react-native';
-// Removed expo-av import - using native Web Audio API only
+import { Audio } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
