@@ -202,8 +202,14 @@ export default function FrequencyFinderScreen() {
   };
 
   const stopTone = async () => {
-    if (currentSound) {
-      await currentSound.stopAsync();
+    try {
+      if (currentSound) {
+        await currentSound.stopAsync();
+        await currentSound.unloadAsync();
+        setCurrentSound(null);
+      }
+    } catch (error) {
+      console.log('Stop tone error:', error);
     }
     setIsPlaying(false);
     setSweepSettings(prev => ({ ...prev, isRunning: false }));
