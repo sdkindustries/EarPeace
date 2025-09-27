@@ -434,65 +434,86 @@ export default function TinnitusTherapyApp() {
         }
       }
 
-      // Implement burst settings
+      // Implement burst settings (completely independent from other audio)
       if (burstSettings.enabled) {
         try {
           console.log('🎵 Starting burst mode...');
           
-          const startBurstMode = () => {
-            let burstSound = null;
-            
-            const playBurst = async () => {
-              try {
-                // Stop any existing burst sound
-                if (burstSound) {
-                  await burstSound.unloadAsync();
-                }
-                
-                // Determine frequency for this burst
-                let burstFreq;
-                if (burstSettings.randomRange) {
-                  // Random frequency within range
-                  burstFreq = Math.random() * (burstSettings.maxFreq - burstSettings.minFreq) + burstSettings.minFreq;
-                  burstFreq = Math.round(burstFreq);
-                } else {
-                  // Fixed frequency
-                  burstFreq = burstSettings.frequency;
-                }
-                
-                console.log(`🎵 Burst: Playing ${burstFreq}Hz for ${burstSettings.duration}ms`);
-                
-                // Generate tone for burst
-                const burstToneUrl = generateToneDataUrl(burstFreq, burstSettings.duration / 1000, 0.4);
-                
-                const { sound } = await Audio.Sound.createAsync(
-                  { uri: burstToneUrl },
-                  { 
-                    shouldPlay: true, 
-                    isLooping: false, // Don't loop - play once for duration
-                    volume: 0.4 
-                  }
-                );
-                
-                burstSound = sound;
-                
-                // Schedule next burst after duration + interval
-                setTimeout(() => {
-                  if (isPlaying && burstSettings.enabled) {
-                    playBurst();
-                  }
-                }, burstSettings.duration + burstSettings.interval);
-                
-              } catch (error) {
-                console.error('Error in burst playback:', error);
+          // Clear any existing burst timers
+          if (burstIntervalRef.current) {
+            clearInterval(burstIntervalRef.current);
+          }
+          if (burstTimeoutRef.current) {
+            clearTimeout(burstTimeoutRef.current);
+          }
+          
+          const playBurstCycle = async () => {
+            try {
+              // Determine frequency for this burst
+              let burstFreq;
+              if (burstSettings.randomRange) {
+                // Random frequency within range
+                burstFreq = Math.random() * (burstSettings.maxFreq - burstSettings.minFreq) + burstSettings.minFreq;
+                burstFreq = Math.round(burstFreq);
+              } else {
+                // Fixed frequency
+                burstFreq = burstSettings.frequency;
               }
-            };
-            
-            // Start the first burst
-            playBurst();
+              
+              console.log(`🎵 Burst: Playing ${burstFreq}Hz for ${burstSettings.duration}ms`);
+              
+              // Generate tone for burst (shorter duration to ensure it stops)
+              const burstToneUrl = generateToneDataUrl(burstFreq, burstSettings.duration / 1000, 0.5);
+              
+              const { sound } = await Audio.Sound.createAsync(
+                { uri: burstToneUrl },
+                { 
+                  shouldPlay: true, 
+                  isLooping: false, // Don't loop - play once for duration
+                  volume: 0.5 
+                }
+              );
+              
+              // Store the burst sound with a unique key
+              setSounds(prev => ({ ...prev, currentBurst: sound }));
+              
+              // Schedule cleanup of this burst sound after it finishes
+              burstTimeoutRef.current = setTimeout(async () => {
+                try {
+                  await sound.stopAsync();
+                  await sound.unloadAsync();
+                  setSounds(prev => {
+                    const newSounds = { ...prev };
+                    delete newSounds.currentBurst;
+                    return newSounds;
+                  });
+                } catch (error) {
+                  console.log('Error cleaning up burst sound:', error);
+                }
+              }, burstSettings.duration + 100); // Add small buffer
+              
+            } catch (error) {
+              console.error('Error in burst playback:', error);
+            }
           };
           
-          startBurstMode();
+          // Start the first burst immediately
+          await playBurstCycle();
+          
+          // Set up interval for repeated bursts
+          const totalCycleTime = burstSettings.duration + burstSettings.interval;
+          burstIntervalRef.current = setInterval(() => {
+            if (isPlaying && burstSettings.enabled) {
+              playBurstCycle();
+            } else {
+              // Stop the interval if not playing anymore
+              if (burstIntervalRef.current) {
+                clearInterval(burstIntervalRef.current);
+                burstIntervalRef.current = null;
+              }
+            }
+          }, totalCycleTime);
+          
           audioSourcesCreated++;
           
           if (burstSettings.randomRange) {
@@ -501,7 +522,7 @@ export default function TinnitusTherapyApp() {
             enabledSources.push(`${burstSettings.frequency}Hz bursts (${burstSettings.duration}ms duration, ${burstSettings.interval}ms interval)`);
           }
           
-          console.log(`✅ Burst mode started`);
+          console.log(`✅ Burst mode started with ${totalCycleTime}ms cycle time`);
         } catch (error) {
           console.error('Failed to create burst audio:', error);
         }
