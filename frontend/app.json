@@ -1,22 +1,25 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "EarPeace - Tinnitus Therapy",
+    "slug": "earpeace-tinnitus-therapy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
+    "scheme": "earpeace",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "description": "Comprehensive tinnitus therapy app with frequency generation, noise masking, and personalized audio treatment.",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.earpeace.therapy"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.earpeace.therapy"
     },
     "web": {
       "bundler": "metro",
